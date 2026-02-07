@@ -3,9 +3,6 @@
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
-  UserIcon,
-  Store,
-  UserStar,
   ChevronRight,
   Eye,
   EyeOff,
@@ -13,6 +10,8 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
+import { signIn } from "next-auth/react";
+import { ROLES } from "@/lib/constants/roles";
 
 export default function Register() {
   const [step, setStep] = useState<1 | 2>(1);
@@ -64,33 +63,20 @@ export default function Register() {
               Register with one of the following account types:
             </p>
             <div className="grid grid-cols-3 gap-4 mb-6">
-              {[
-                {
-                  label: "User",
-                  icon: <UserIcon className="w-8 h-8 mb-2" />,
-                  value: "user",
-                },
-                {
-                  label: "Vendor",
-                  icon: <Store className="w-8 h-8 mb-2" />,
-                  value: "vendor",
-                },
-                {
-                  label: "Admin",
-                  icon: <UserStar className="w-8 h-8 mb-2" />,
-                  value: "admin",
-                },
-              ].map((item) => (
-                <motion.div
-                  key={item.value}
-                  whileHover={{ scale: 1.01 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="p-4 bg-white/5 hover:bg-white/20 cursor-pointer rounded-xl  border border-white/30 shadow-lg flex flex-col items-center transition"
-                >
-                  {item.icon}
-                  <span className="text-sm font-medium"> {item.label} </span>
-                </motion.div>
-              ))}
+              {ROLES.map((role) => {
+                const Icon = role.icon;
+                return (
+                  <motion.div
+                    key={role.value}
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="p-4 bg-white/5 hover:bg-white/20 cursor-pointer rounded-xl  border border-white/30 shadow-lg flex flex-col items-center transition"
+                  >
+                    <Icon className="w-8 h-8 mb-2" />
+                    <span className="text-sm font-medium"> {role.label} </span>
+                  </motion.div>
+                );
+              })}
             </div>
 
             <motion.button
@@ -172,6 +158,8 @@ export default function Register() {
                 whileHover={{ scale: 1.01 }}
                 whileTap={{ scale: 0.95 }}
                 className="flex items-center justify-center gap-3 py-3 bg-white/10 hover:bg-white/20 border border-white/30 rounded-xl transition-colors duration-300"
+
+                onClick={() => signIn("google", {callbackUrl: "/"})}
               >
                 <img src={`https://img.icons8.com/?size=100&id=17949&format=png&color=000000`} alt="google icon" className="w-5 h-5"/>
                 <span className="font-medium ">Continue with Google  </span>
