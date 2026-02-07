@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 export default function EditRoleAndPhone() {
-  const [role, setRole] = useState<userRole | "">("user");
+  const [role, setRole] = useState<userRole | "">("");
   const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
 
