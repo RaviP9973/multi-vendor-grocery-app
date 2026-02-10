@@ -1,3 +1,4 @@
+import CategorySlider from './CategorySlider'
 import Slider from './Slider'
 
 const UserDashboard = () => {
@@ -5,7 +6,7 @@ const UserDashboard = () => {
     <div className="w-full min-h-screen flex items-center justify-center bg-linear-to-br from-gray-900 via-black to-gray-900 font-sans flex-col  ">
 
         <Slider />
-      
+        <CategorySlider />
     </div>
   )
 }

@@ -9,31 +9,47 @@ export interface IUser {
   email: string;
   password?: string;
   image?: string;
-  role: "user" | "vendor" | "admin";
+  role: userRole;
   phone?: string;
-
-  // for vendors
-  shop_name?: string;
-  shop_address?: string;
-  gst_number?: string;
-  is_approved?: boolean;
-  verification_status?: "pending" | "approved" | "rejected";
-  requested_at?: Date;
-  approved_at?: Date;
-  rejection_reason?: string;
-
-  vendor_products?: string[]; // Array of product IDs
-
-  orders?: string[]; // Array of order IDs
-
-  cart?: {
-    productId: string;
-    quantity: number;
-  }[];
 
   created_at?: Date;
   updated_at?: Date;
 }
+
+export interface IVendor {
+  id?: string;
+  user_id: string;
+
+  shop_name?: string;
+  shop_address?: string;
+  gst_number?: string;
+
+  status: verificationStatus;
+  rejection_reason?: string;
+
+  requested_at?: Date;
+  approved_at?: Date;
+  rejected_at?: Date;
+}
+
+export interface IProduct {
+  id?: string;
+  vendor_id: string;
+  name: string;
+  price: number;
+  stock?: number;
+
+  created_at?: Date;
+  updated_at?: Date;
+}
+
+export interface ICartItem {
+  id?: string;
+  user_id: string;
+  product_id: string;
+  quantity: number;
+}
+
 
 export type userRole = "user" | "vendor" | "admin";
 export type verificationStatus = "pending" | "approved" | "rejected";
@@ -72,25 +88,7 @@ async function main() {
         password TEXT,
         image TEXT,
         role user_role NOT NULL DEFAULT 'user',
-        
-        -- Vendor-specific fields
-        shop_name TEXT,
-        shop_address TEXT,
-        gst_number TEXT,
-        is_approved BOOLEAN DEFAULT false,
-
-        verification_status verification_status DEFAULT 'pending',
-
-        requested_at TIMESTAMPTZ,
-        approved_at TIMESTAMPTZ,
-        rejection_reason TEXT,
-        
-        -- Relations (stored as arrays of UUIDs)
-        vendor_products UUID[] DEFAULT '{}',
-        orders UUID[] DEFAULT '{}',
-        
-        -- Cart stored as JSONB
-        cart JSONB DEFAULT '[]',
+        phone TEXT CHECK (char_length(phone) BETWEEN 8 AND 13),
         
         -- Timestamps
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -98,9 +96,44 @@ async function main() {
     )`;
 
   await sql`
-    ALTER TABLE users
-    ADD COLUMN phone TEXT
-    CHECK (char_length(phone) BETWEEN 8 AND 13);
+    CREATE TABLE vendors (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id UUID UNIQUE NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+
+      shop_name TEXT,
+      shop_address TEXT,
+      gst_number TEXT,
+      
+      status verification_status DEFAULT 'pending',
+      rejection_reason TEXT,
+
+      requested_at TIMESTAMPTZ,
+      approved_at TIMESTAMPTZ,
+      rejected_at TIMESTAMPTZ
+    )
+  `;
+  await sql`
+    CREATE TABLE products (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      vendor_id UUID NOT NULL REFERENCES vendors(id) ON DELETE CASCADE,
+      name TEXT NOT NULL,
+      price NUMERIC(10, 2) NOT NULL,
+      stock INT DEFAULT 0,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `;
+
+  await sql`
+    CREATE TABLE CART_ITEMS (
+      ID UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      USER_ID UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      PRODUCT_ID UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+      QUANTITY INT NOT NULL DEFAULT 1 CHECK (quantity > 0),
+
+      UNIQUE (USER_ID, PRODUCT_ID)
+
+    )
     `;
 
   console.log("Tables created successfully");
