@@ -8,11 +8,11 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 export default function EditRoleAndPhone() {
-  const [role, setRole] = useState<userRole | "">("");
+  const [role, setRole] = useState<userRole >("user");
   const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const [adminExists, setAdminExists] = useState(false);
+  const [adminExists, setAdminExists] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
@@ -76,35 +76,37 @@ export default function EditRoleAndPhone() {
             />
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 ">
-              {ROLES.map((role) => {
-                const isAdminBlocked = role.value === "admin" && adminExists;
-                const Icon = role.icon;
+              {ROLES.map((roleOption) => {
+                const isAdminBlocked = roleOption.value === "admin" && adminExists;
+                const Icon = roleOption.icon;
                 return (
                   <motion.div
                     whileHover={
                       !isAdminBlocked ? { scale: 1.07 } : { scale: 1 }
                     }
-                    key={role.value}
-                    className={`cursor-pointer p-6 text-center rounded-2xl border transition text-lg font-medium ${isAdminBlocked && "opacity-40 cursor-not-allowed "}`}
+                    key={roleOption.value}
+                    className={`cursor-pointer p-6 text-center rounded-2xl border transition text-lg font-medium ${
+                      isAdminBlocked && "opacity-40 cursor-not-allowed "
+                    } 
+                    ${roleOption.value === role && "bg-blue-600 text-white border-blue-600 "}
+                    `}
                     onClick={() => {
                       if (isAdminBlocked) {
-                        alert(
-                          "Admin exists already",
-                        );
+                        alert("Admin exists already");
                         return;
                       }
 
-                      setRole(role.value);
+                      setRole(roleOption.value);
                     }}
                   >
                     <div className="flex flex-col items-center mb-3">
                       <Icon className="w-8 h-8" />
                     </div>
-                    <p>{role.label}</p>
+                    <p>{roleOption.label}</p>
 
                     {isAdminBlocked && (
                       <p className="text-red-500 text-sm mt-2">
-                        Admin exists already, you can't select admin role
+                        Admin exists already,
                       </p>
                     )}
                   </motion.div>
