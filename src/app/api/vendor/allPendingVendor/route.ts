@@ -15,12 +15,15 @@ export async function GET(req: NextRequest) {
         },
       );
     }
-    const limitString = req.nextUrl.searchParams.get("limit") || '50'
+    const limitString = req.nextUrl.searchParams.get("limit") || "50";
     const limit = parseInt(limitString, 10);
     const safeLimit = isNaN(limit) ? 50 : limit;
 
+    // fetch all pending vendors from the database along with user details 
     const vendors = await sql`
-        SELECT * FROM vendors
+        SELECT vendors.*, users.name as user_name, users.phone FROM vendors
+        INNER JOIN users ON vendors.user_id = users.id
+        WHERE status = 'pending'
         ORDER BY requested_at DESC
         LIMIT ${safeLimit}
         `;

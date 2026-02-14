@@ -2,7 +2,7 @@ import { IVendor } from "@/script/migrate";
 import { createSlice } from "@reduxjs/toolkit";
 
 interface IVendorData {
-    allVendorData: IVendor[] | null
+    allVendorData: IVendor[] | []
 }
 
 const initialState: IVendorData = {

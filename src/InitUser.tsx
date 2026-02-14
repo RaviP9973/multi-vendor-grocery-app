@@ -1,12 +1,12 @@
-'use client'
+"use client";
 
-import UseGetAllVendors from "./hooks/UseGetAllVendors";
-import UseGetCurrentUser from "./hooks/UseGetCurrentUser"
+// import UseGetAllVendors from "./hooks/UseGetAllVendors";
+import UseGetCurrentUser from "./hooks/UseGetCurrentUser";
 
 const InitUser = () => {
   UseGetCurrentUser();
-  UseGetAllVendors();
+  // UseGetAllVendors();
   return null;
-}
+};
 
-export default InitUser
+export default InitUser;
