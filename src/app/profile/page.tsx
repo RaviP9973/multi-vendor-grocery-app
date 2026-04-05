@@ -1,13 +1,15 @@
 "use client";
 
-import { RootState } from "@/redux/store";
-import { useSelector } from "react-redux";
+import { AppDispatch, RootState } from "@/redux/store";
+import { useDispatch, useSelector } from "react-redux";
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
-import { User } from "lucide-react";
+import { Loader, User } from "lucide-react";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
+import { updateVendorDetails } from "../actions/vendor";
+import { setUserData } from "@/redux/userSlice";
 
 type VendorDetails = {
   shop_name?: string;
@@ -29,10 +31,17 @@ const Profile = () => {
   );
   const [phone, setPhone] = useState(user?.phone || "");
   const [shopName, setShopName] = useState(vendorDetails?.shop_name || "");
-  const [shopAddress, setShopAddress] = useState(vendorDetails?.shop_address || "");
+  const [shopAddress, setShopAddress] = useState(
+    vendorDetails?.shop_address || "",
+  );
   const [gstNumber, setGstNumber] = useState(vendorDetails?.gst_number || "");
 
   const [loading, setLoading] = useState(false);
+
+  const [updateLoading, setUpdateLoading] = useState(false);
+  const dispatch = useDispatch<AppDispatch>();
+
+
 
   const getVendorDetails = async () => {
     try {
@@ -63,6 +72,18 @@ const Profile = () => {
     }
   }, [user?.role]);
 
+  useEffect(() => {
+    setName(user?.name || "");
+    setPhone(user?.phone || "");
+    setPreviewImage(user?.image || "");
+  }, [user?.name, user?.phone, user?.image]);
+
+  useEffect(() => {
+    setShopAddress(vendorDetails?.shop_address || "");
+    setShopName(vendorDetails?.shop_name || "");
+    setGstNumber(vendorDetails?.gst_number || "");
+  }, [vendorDetails]);
+
   const handlePreviewImage = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
 
@@ -70,6 +91,64 @@ const Profile = () => {
     setProfileImage(file);
 
     setPreviewImage(URL.createObjectURL(file));
+  };
+
+  const handleSubmit = async () => {
+    if (!shopName || !shopAddress || !gstNumber) {
+      alert("Fill all fields");
+      return;
+    }
+    setUpdateLoading(true);
+
+    try {
+      const result = await updateVendorDetails({
+        shopName,
+        shopAddress,
+        gstNumber,
+      });
+
+      if (result.success) {
+        console.log(result.message, result.vendor);
+        router.push("/");
+      } else {
+        alert(result.message);
+      }
+    } catch (error) {
+      console.error("Error in updating details", error);
+      alert("An error occurred while updating details");
+    } finally {
+      setUpdateLoading(false);
+    }
+  };
+
+  const handleProfileUpdate = async () => {
+    if (!name || !phone) {
+      return;
+    }
+    try {
+      setUpdateLoading(true);
+      const formData = new FormData();
+      formData.append("name", name);
+      formData.append("phone", phone);
+      if (profileImage) {
+        formData.append("image", profileImage);
+      }
+
+      const res = await axios.post("/api/user/update-profile",formData);
+
+      if(res.status === 200) {
+        dispatch(setUserData(res.data.user));
+        alert("Profile updated successfully");
+        setProfileImage(null);
+      }
+
+    } catch (error) {
+      console.error("Error updating profile", error);
+      alert("An error occurred while updating profile");
+      
+    }finally {
+      setUpdateLoading(false);
+    }
   };
 
   return (
@@ -83,7 +162,7 @@ const Profile = () => {
         <div className="flex flex-col items-center text-center ">
           <motion.div
             whileHover={{ scale: 1.05 }}
-            className="w-24 h-2 sm:w-28 sm:h-28 rounded-full overflow-hidden border border-white/30 hover:border-blue-400"
+            className="w-24 h-24 sm:w-28 sm:h-28 rounded-full overflow-hidden border border-white/30 hover:border-blue-400"
           >
             {user?.image ? (
               <Image src={user?.image} alt="profile" width={120} height={120} />
@@ -216,15 +295,17 @@ const Profile = () => {
                   type="text"
                   className="w-full p-3 bg-white/10 border border-white/20 rounded"
                   placeholder="Phone"
-                  onChange={(e) => setName(e.target.value)}
+                  onChange={(e) => setPhone(e.target.value)}
                   value={phone}
                 />
 
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   className="bg-blue-600 hover:bg-blue-700 py-3 rounded-lg font-semibold w-full "
+
+                  onClick={handleProfileUpdate}
                 >
-                  update profile
+                  {updateLoading ? <Loader className="animate-spin duration-75"/> : "Update Profile"}
                 </motion.button>
               </div>
             </motion.div>
@@ -268,8 +349,10 @@ const Profile = () => {
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   className="bg-blue-600 hover:bg-blue-700 py-3 rounded-lg font-semibold w-full "
+                  disabled={updateLoading}
+                  onClick={handleSubmit}
                 >
-                  update profile
+                  {updateLoading ? "Updating..." : "Update Shop Details"}
                 </motion.button>
               </div>
             </motion.div>

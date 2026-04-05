@@ -29,8 +29,10 @@ export async function updateVendorDetails(formData: {
     }
 
     const res = await sql`
-      INSERT INTO VENDORS (user_id, shop_name, shop_address, gst_number, requested_at) 
+     INSERT INTO Vendors (user_id, shop_name, shop_address, gst_number, requested_at)
       VALUES (${session.user.id}, ${shopName}, ${shopAddress}, ${gstNumber}, NOW())
+      ON CONFLICT (user_id) DO UPDATE 
+      SET shop_name = ${shopName}, shop_address = ${shopAddress}, gst_number = ${gstNumber}, requested_at = NOW()
       RETURNING id, shop_name, shop_address, status, gst_number, requested_at;
     `;
 
@@ -56,3 +58,4 @@ export async function updateVendorDetails(formData: {
     };
   }
 }
+

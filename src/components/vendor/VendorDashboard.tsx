@@ -54,7 +54,7 @@ const VendorDashboard = () => {
 
       {/* desktop */}
       <motion.div
-        className="hidden lg:block w-72 bg-gray-800/40 border-r border-gray-700 mt-12 p-6 backdrop-blur-xl "
+        className="hidden lg:block w-72 bg-gray-800/40 border-r border-gray-700  p-6 backdrop-blur-xl "
         initial={{ x: -40, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
         transition={{ duration: 0.5 }}

@@ -34,11 +34,39 @@ export interface IVendor {
 
 export interface IProduct {
   id?: string;
+
   vendor_id: string;
   name: string;
+  description: string;
   price: number;
   stock?: number;
+  is_stock_available?: boolean;
 
+  image1: string;
+  image2: string;
+  image3: string;
+  image4: string;
+  category: string;
+
+  is_wearable: boolean;
+  size?: string[];
+  
+  status: verificationStatus;
+  rejection_reason?: string;
+
+  requested_at?: Date;
+  approved_at?: Date;
+  rejected_at?: Date;
+
+  is_active?: boolean;
+
+  replacement_date? : number;
+  free_delivery?: boolean;
+  warranty?: string;
+  pay_on_delivery?: boolean;
+
+  details_points: string[];
+  
   created_at?: Date;
   updated_at?: Date;
 }
@@ -57,9 +85,9 @@ async function main() {
   console.log("Starting migration...");
 
   // Step 2: Create user_role type safely
-  await sql`
-    DROP TABLE IF EXISTS users;
-  `;
+  // await sql`
+  //   DROP TABLE IF EXISTS users;
+  // `;
   await sql`
     DO $$
     BEGIN 
@@ -77,9 +105,9 @@ async function main() {
         END IF;
     END $$`;
 
-  // Step 4: Create the table
-  await sql`
-    CREATE TABLE users (
+  // users table
+await sql`
+    CREATE TABLE IF NOT EXISTS users (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         
         -- Basic user fields
@@ -95,8 +123,9 @@ async function main() {
         updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )`;
 
+// vendors table
   await sql`
-    CREATE TABLE vendors (
+    CREATE TABLE IF NOT EXISTS vendors (
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
       user_id UUID UNIQUE NOT NULL REFERENCES users(id) ON DELETE CASCADE,
 
@@ -112,20 +141,81 @@ async function main() {
       rejected_at TIMESTAMPTZ
     )
   `;
+
+  
+  // products table
   await sql`
-    CREATE TABLE products (
+    CREATE TABLE IF NOT EXISTS products (
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
       vendor_id UUID NOT NULL REFERENCES vendors(id) ON DELETE CASCADE,
       name TEXT NOT NULL,
+      description TEXT NOT NULL,
+
       price NUMERIC(10, 2) NOT NULL,
       stock INT DEFAULT 0,
+      is_stock_available BOOLEAN DEFAULT TRUE,
+
+      image1 TEXT NOT NULL,
+      image2 TEXT,
+      image3 TEXT,
+      image4 TEXT,
+
+      category TEXT NOT NULL,
+
+      Is_wearable BOOLEAN DEFAULT FALSE,
+      size TEXT[],
+
+      status verification_status DEFAULT 'pending',
+      rejection_reason TEXT,
+
+      requested_at TIMESTAMPTZ,
+      approved_at TIMESTAMPTZ,
+      rejected_at TIMESTAMPTZ,
+
+      is_active BOOLEAN DEFAULT TRUE,
+
+      replacement_date INT,
+      free_delivery BOOLEAN DEFAULT FALSE,
+      warranty TEXT,
+      pay_on_delivery BOOLEAN DEFAULT FALSE, 
+
+      details_points TEXT[],
+
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
   `;
+// reviews table 
+  await sql`
+  CREATE TABLE IF NOT EXISTS reviews (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+
+    -- target can be product OR vendor
+    target_id UUID NOT NULL,
+    target_type TEXT NOT NULL CHECK (target_type IN ('product', 'vendor')),
+
+    rating INT NOT NULL CHECK (rating BETWEEN 1 AND 5),
+    comment TEXT,
+
+    images TEXT[],
+
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+    -- prevent duplicate reviews by same user
+    UNIQUE (user_id, target_id, target_type)
+  )
+`;
+
+await sql`
+  CREATE INDEX IF NOT EXISTS idx_reviews_target 
+  ON reviews (target_id, target_type);
+`;
 
   await sql`
-    CREATE TABLE CART_ITEMS (
+    CREATE TABLE IF NOT EXISTS CART_ITEMS (
       ID UUID PRIMARY KEY DEFAULT gen_random_uuid(),
       USER_ID UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
       PRODUCT_ID UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE,
