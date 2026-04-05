@@ -20,7 +20,7 @@ function UseGetCurrentUser() {
 
       try {
         const result = await axios.get("api/user/currentUser");
-        dispatch(setUserData(result.data));
+        dispatch(setUserData(result.data.user));
       } catch (error) {
         console.error(error);
         dispatch(setUserData(null));

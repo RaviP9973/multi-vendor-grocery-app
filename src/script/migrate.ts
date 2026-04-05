@@ -136,6 +136,13 @@ async function main() {
     )
     `;
 
+  // Enforce business rule: only one user can hold the admin role at a time.
+  await sql`
+    CREATE UNIQUE INDEX IF NOT EXISTS users_single_admin_idx
+    ON users (role)
+    WHERE role = 'admin'
+  `;
+
   console.log("Tables created successfully");
 }
 

@@ -47,15 +47,22 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   callbacks: {
     async signIn({ user, account }) {
       if (account?.provider === "google") {
-        let dbUser = await sql`
-                SELECT id, name, email, role FROM users WHERE email = ${user.email} LIMIT 1
-            `;
+        const normalizedEmail = String(user.email || "").trim().toLowerCase();
+
+        const dbUser = await sql`
+          INSERT INTO users (name, email, role, image)
+          VALUES (${user.name}, ${normalizedEmail}, 'user', ${user.image})
+          ON CONFLICT (email)
+          DO UPDATE SET
+            name = COALESCE(EXCLUDED.name, users.name),
+            image = COALESCE(EXCLUDED.image, users.image)
+          RETURNING id, name, email, role, image
+        `;
 
         if (dbUser.length === 0) {
-          dbUser = await sql`
-                    INSERT INTO users (name,email, role,image) VALUES (${user.name}, ${user.email}, 'user', ${user.image}) RETURNING id, name, email, role, image
-                `;
+          throw new Error("Unable to resolve user during Google sign-in.");
         }
+
         user.id = dbUser[0].id.toString();
         user.role = dbUser[0].role.toString();
       }

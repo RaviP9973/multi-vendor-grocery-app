@@ -21,6 +21,13 @@ const VendorAproval = () => {
   );
   const [approveLoading, setApproveLoading] = useState(false);
   const [rejectLoading, setRejectLoading] = useState(false);
+  const [rejectModal, setRejectModal] = useState(false);
+  const [rejectionReason, setRejectionReason] = useState("");
+
+  const openRejectModal = () => {
+    setRejectModal(true);
+    setRejectionReason("");
+  }
 
   const dispatch = useDispatch();
 
@@ -228,11 +235,7 @@ const VendorAproval = () => {
                 <button
                   className="flex-1 bg-red-600 py-2 rounded-lg hover:bg-red-700 text-sm"
                   onClick={() => {
-                    updateStatus(
-                      selectedVendor?.id as string,
-                      "rejected",
-                      "Rejected by admin",
-                    );
+                    openRejectModal();
                   }}
 
                   disabled={rejectLoading || approveLoading}
@@ -255,6 +258,64 @@ const VendorAproval = () => {
           </motion.div>
         )}
       </AnimatePresence>
+      <AnimatePresence>
+        {rejectModal && (
+          <motion.div
+            className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 px-4 "
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className="bg-gray-900 p-6  rounded-2xl w-full max-w-lg border border-white/10"
+              initial={{ scale: 0.9 }}
+              animate={{ scale: 1 }}
+              transition={{ duration: 0.6 }}
+              exit={{ scale: 0.9 }}
+            >
+              <h3 className="text-xl sm:text-2xl font-bold mb-4 ">
+                Enter rejection reason
+              </h3>
+
+              <textarea className="w-full bg-white/10 border border-white/20 rounded-lg p-3 text-sm " name="rejectionReason" id="rejectionReason" placeholder="Enter rejection reason" 
+              value={rejectionReason} 
+              onChange={(e) => setRejectionReason(e.target.value)} 
+              rows={3}
+              />
+
+              
+
+              <div className="flex flex-col sm:flex-row gap-3 mt-6">
+                <button
+                  className="flex-1 bg-red-600 py-2 rounded-lg hover:bg-red-700 text-sm"
+                  onClick={() => {
+                    updateStatus(selectedVendor?.id as string, "rejected", rejectionReason);
+                    setRejectModal(false);
+                  }}
+
+                  disabled={rejectLoading || approveLoading}
+                >
+                  {rejectLoading ? (
+                    // SHOW LOADER
+                    <Loader className="animate-spin duration-300 " />
+                  ) : (
+                    "Confirm Reject"
+                  )}
+                </button>
+                <button
+                  className="flex-1 bg-gray-600 py-2 rounded-lg hover:bg-gray-700 text-sm"
+                  onClick={() => setRejectModal(false)}
+                >
+                  Cancel
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      
     </div>
   );
 };

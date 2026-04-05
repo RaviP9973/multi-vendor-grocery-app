@@ -14,7 +14,7 @@ export default function Login() {
 
   const session = useSession();
 
-  console.log(session.data?.user);
+  // console.log(session.data?.user);
   const router = useRouter();
 
   const handleSignin = async (e: React.FormEvent) => {

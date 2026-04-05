@@ -4,6 +4,7 @@ import { IUser, IVendor } from "@/script/migrate";
 import { redirect } from "next/navigation";
 import VendorDashboard from "./VendorDashboard";
 import { TimerIcon } from "lucide-react";
+import Link from "next/link";
 
 export default async function Vendorpage({ user }: { user: IUser }) {
   const session = await auth();
@@ -57,7 +58,37 @@ export default async function Vendorpage({ user }: { user: IUser }) {
   if (vendor?.status === "rejected") {
     return (
       <div className="w-full min-h-screen flex items-center justify-center bg-linear-to-br from-gray-900 via-black  to-gray-900 text-white px-4">
-        
+        <div className="bg-white/10 backdrop:blur-md p-12 rounded-2xl shadow-2xl border border-white/30 max-w-2xl w-full text-center ">
+          <h2 className="text-4xl font-bold mb-6 text-red-400 flex justify-center items-center gap-2">
+            Verification Rejected
+            <TimerIcon size={32} />
+          </h2>
+          <p className="text-gray-200 text-lg leading-relaxed ">
+            Your business verification was rejected by{" "}
+            <span className="font-semibold ">Admin</span>
+          </p>
+
+          <div className="mt-6 text-base text-gray-300 ">
+            VerificationStatus:{" "}
+            <span className="text-red-400 font-semibold uppercase">
+              {" "}
+              {vendor?.status}{" "}
+            </span>
+          </div>
+
+          <div className="mt-1 text-sm text-red-400 ">
+            {vendor?.rejection_reason
+              ? `Reason: ${vendor.rejection_reason}`
+              : "No rejection reason provided."}
+          </div>
+
+          <Link
+            className="bg-blue-600 hover:bg-blue-700 px-8 rounded-lg font-semibold py-2 mt-3 inline-block"
+            href="/edit-vendor-details"
+          >
+            verify details again
+          </Link>
+        </div>
       </div>
     );
   }
